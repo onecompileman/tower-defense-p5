@@ -1,10 +1,20 @@
 class GameManager {
 
     constructor() {
+        this.initSoundManager();
         this.initEnemyPaths();
         this.initTowerPoints();
         this.initEnemies();
         this.initBullets();
+        this.initParticleSystems();
+    }
+
+    initParticleSystems() {
+        this.particleSystems = [];
+    }
+
+    initSoundManager() {
+        this.soundManager = new SoundManager();
     }
 
     initEnemyPaths() {
@@ -12,6 +22,7 @@ class GameManager {
             return createVector(x, y);
         });;
     }
+
 
     initTowerPoints() {
         this.towerPoints = LevelData[0].towerPoints.map(([x, y]) => {
@@ -60,7 +71,21 @@ class GameManager {
             bullet.update();
             bullet.display();
 
-            return !bullet.isCollided;
+            if (bullet.isCollided) {
+                const particleSystem = new ParticleSystem({
+                    count: 3,
+                    cols: [color(91, 100, 68, 255), color(53, 96, 57, 255)],
+                    shape: 'rect',
+                    size: createVector(10, 10),
+                    life: 40,
+                    position: bullet.pos.copy()
+                });
+                this.particleSystems.push(particleSystem);
+
+                return false;
+            }
+
+            return true;
         });
     }
 
@@ -71,7 +96,23 @@ class GameManager {
             enemy.update();
             enemy.display();
 
-            return !enemy.isDead();
+            if (enemy.isDead()) {
+                const particleSystem = new ParticleSystem({
+                    count: 6,
+                    cols: [color(91, 100, 68, 255), color(310, 100, 68, 255)],
+                    shape: 'rect',
+                    size: createVector(30, 30),
+                    life: 60,
+                    position: enemy.pos.copy()
+                });
+                this.particleSystems.push(particleSystem);
+
+                this.soundManager.playSound("enemyExplode", 1);
+
+                return false;
+            }
+
+            return true;
         })
     }
 
@@ -93,8 +134,16 @@ class GameManager {
 
             const bullet = towerPoint.fire();
             if (bullet) {
+                this.soundManager.playSound("playerShoot", 0.05);
                 this.bullets.push(bullet);
             }
+        });
+    }
+
+    renderParticleSystem() {
+        this.particleSystems = this.particleSystems.filter(ps => {
+            ps.render();
+            return !ps.isDead();
         });
     }
 
@@ -103,6 +152,7 @@ class GameManager {
         this.renderBullets();
         this.renderTowerPoints();
         this.renderEnemy();
+        this.renderParticleSystem();
     }
 
 }

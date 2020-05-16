@@ -2,11 +2,14 @@ let circlePoints = [];
 
 let gameManager;
 
+function preload() {
+    gameManager = new GameManager();
+}
+
 function setup() {
     createCanvas(1024, 640);
     colorMode(HSB);
     smooth();
-    gameManager = new GameManager();
     // blendMode(SCREEN);
 }
 
